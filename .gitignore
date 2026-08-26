@@ -1,0 +1,14 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+
+# Checkpoints & temporary data
+checkpoints/
+*.jsonl
+
+# Backups
+*.bak
+
+# Test manifests
+test_manifest*.json
