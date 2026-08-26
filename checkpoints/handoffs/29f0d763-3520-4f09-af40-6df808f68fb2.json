@@ -1,0 +1,25 @@
+{
+  "handoffId": "29f0d763-3520-4f09-af40-6df808f68fb2",
+  "timestamp": "2026-08-19T14:34:53.659000",
+  "fromStage": "transcription",
+  "toStage": "__AVAILABLE_OUTPUTS__",
+  "workflowId": "video-processing-test123",
+  "artifacts": [
+    {
+      "artifactType": "transcript",
+      "artifactId": "video-transcript",
+      "version": "1.0.0",
+      "location": "file:///output/transcript.json",
+      "producerStage": "transcription",
+      "validationStatus": "passed"
+    }
+  ],
+  "decision": {
+    "decision": "approved",
+    "rationale": "All generic validation checks passed and no errors found",
+    "relatedArtifacts": [
+      "ArtifactReference(artifact_type='transcript', artifact_id='video-transcript', version='1.0.0', location='file:///output/transcript.json', producer_stage='transcription', validation_status='pending')"
+    ]
+  },
+  "version": "1.0.0"
+}

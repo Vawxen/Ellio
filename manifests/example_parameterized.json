@@ -1,0 +1,74 @@
+{
+    "manifestVersion": "1.0.0",
+    "workflowId": "video-processing-{{workflow_suffix}}",
+    "name": "Video Processing Pipeline - {{video_title}}",
+    "description": "Parameterized workflow for processing {{input_video_path}}",
+    "stages": [
+      {
+        "stageId": "ingest",
+        "agentRole": "python -c \"print('Stage executed')\"",
+        "dependsOn": [],
+        "inputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "source-video",
+            "version": "1.0.0",
+            "location": "{{input_video_path}}"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "ingested-video",
+            "version": "1.0.0",
+            "location": "file:///output/ingested-video.mp4"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-input",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/video-artifact-v1.json"
+            }
+          }
+        ],
+        "timeoutSeconds": 30,
+        "retryPolicy": {
+          "maxAttempts": 2,
+          "backoffSeconds": 5
+        }
+      },
+      {
+        "stageId": "transcription",
+        "agentRole": "python -c \"print('Stage executed')\"",
+        "dependsOn": ["ingest"],
+        "inputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "ingested-video",
+            "version": "1.0.0",
+            "location": "file:///output/ingested-video.mp4"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "transcript",
+            "artifactId": "video-transcript",
+            "version": "1.0.0",
+            "location": "file:///output/transcript.json"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-transcript",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/transcript-artifact-v1.json"
+            }
+          }
+        ],
+        "timeoutSeconds": 60
+      }
+    ]
+  }

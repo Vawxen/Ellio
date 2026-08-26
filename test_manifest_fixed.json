@@ -1,0 +1,76 @@
+{
+  "manifestVersion": "1.0.0",
+  "workflowId": "video-processing-workflow",
+  "name": "test workflow",
+  "parameters": {
+    "input_video_path": "/default/input/video.mp4",
+    "output_directory": "/default/output",
+    "transcript_location": ""
+  },
+  "stages": [
+    {
+      "stageId": "transcription",
+      "agentRole": "transcription-agent",
+      "dependsOn": [],
+      "inputs": [
+        {
+          "artifactType": "video",
+          "artifactId": "input_video",
+          "version": "1.0.0",
+          "location": "{{input_video_path}}"
+        }
+      ],
+      "outputs": [
+        {
+          "artifactType": "transcript",
+          "artifactId": "transcript_{{workflowId}}",
+          "version": "1.0.0",
+          "location": "{{output_directory}}/transcripts/transcript_{{workflowId}}.json",
+          "producerStage": "transcription",
+          "validationStatus": "pending"
+        }
+      ],
+      "qualityGates": [
+        {
+          "gateId": "schema_validation",
+          "type": "schemaValidation"
+        }
+      ]
+    },
+    {
+      "stageId": "translation",
+      "agentRole": "translation-agent",
+      "dependsOn": ["transcription"],
+      "inputs": [
+        {
+          "artifactType": "transcript",
+          "artifactId": "transcript_{{workflowId}}",
+          "version": "1.0.0",
+          "location": "{{transcript_location}}"
+        },
+        {
+          "artifactType": "string",
+          "artifactId": "target_language",
+          "version": "1.0.0",
+          "location": "Literal:es"
+        }
+      ],
+      "outputs": [
+        {
+          "artifactType": "transcript",
+          "artifactId": "translated_transcript_{{workflowId}}",
+          "version": "1.0.0",
+          "location": "{{output_directory}}/translations/translated_transcript_{{workflowId}}.json",
+          "producerStage": "translation",
+          "validationStatus": "pending"
+        }
+      ],
+      "qualityGates": [
+        {
+          "gateId": "schema_validation",
+          "type": "schemaValidation"
+        }
+      ]
+    }
+  ]
+}

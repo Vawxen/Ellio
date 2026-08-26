@@ -1,0 +1,143 @@
+{
+    "manifestVersion": "1.0.0",
+    "workflowId": "video-processing-example",
+    "name": "Video Processing Pipeline Example",
+    "description": "Example workflow demonstrating video ingest -> transcription -> translation -> subtitle generation",
+    "stages": [
+      {
+        "stageId": "ingest",
+        "agentRole": "cmd /c echo \"Stage executed\"",
+        "dependsOn": [],
+        "inputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "source-video",
+            "version": "1.0.0",
+            "location": "file:///input/video.mp4"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "ingested-video",
+            "version": "1.0.0",
+            "location": "file:///output/ingested-video.mp4"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-input",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/video-artifact-v1.json"
+            }
+          }
+        ],
+        "timeoutSeconds": 30,
+        "retryPolicy": {
+          "maxAttempts": 2,
+          "backoffSeconds": 5
+        }
+      },
+      {
+        "stageId": "transcription",
+        "agentRole": "cmd /c echo \"Stage executed\"",
+        "dependsOn": ["ingest"],
+        "inputs": [
+          {
+            "artifactType": "video",
+            "artifactId": "ingested-video",
+            "version": "1.0.0",
+            "location": "file:///output/ingested-video.mp4"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "transcript",
+            "artifactId": "video-transcript",
+            "version": "1.0.0",
+            "location": "file:///output/transcript.json"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-transcript",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/transcript-artifact-v1.json"
+            }
+          }
+        ],
+        "timeoutSeconds": 60
+      },
+      {
+        "stageId": "translation",
+        "agentRole": "cmd /c echo \"Stage executed\"",
+        "dependsOn": ["transcription"],
+        "inputs": [
+          {
+            "artifactType": "transcript",
+            "artifactId": "video-transcript",
+            "version": "1.0.0",
+            "location": "file:///output/transcript.json"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "translated-transcript",
+            "artifactId": "translated-transcript",
+            "version": "1.0.0",
+            "location": "file:///output/translated-transcript.json"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-translation",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/translated-transcript-artifact-v1.json"
+            }
+          }
+        ]
+      },
+      {
+        "stageId": "subtitle-generation",
+        "agentRole": "cmd /c echo \"Stage executed\"",
+        "dependsOn": ["translation"],
+        "inputs": [
+          {
+            "artifactType": "translated-transcript",
+            "artifactId": "translated-transcript",
+            "version": "1.0.0",
+            "location": "file:///output/translated-transcript.json"
+          }
+        ],
+        "outputs": [
+          {
+            "artifactType": "subtitles",
+            "artifactId": "video-subtitles",
+            "version": "1.0.0",
+            "location": "file:///output/subtitles.srt"
+          }
+        ],
+        "qualityGates": [
+          {
+            "gateId": "validate-subtitles",
+            "type": "schemaValidation",
+            "config": {
+              "schemaUri": "schemas/subtitle-artifact-v1.json"
+            }
+          }
+        ]
+      }
+    ],
+    "globalQualityGates": [
+      {
+        "gateId": "universal-artifact-check",
+        "type": "schemaValidation",
+        "config": {
+          "schemaUri": "schemas/universal-artifact-v1.json"
+        }
+      }
+    ]
+  }

@@ -1,0 +1,25 @@
+{
+  "handoffId": "e0d07d4c-b98e-4cfd-a0e4-cf292e690edf",
+  "timestamp": "2026-08-19T14:33:27.611611",
+  "fromStage": "subtitle-generation",
+  "toStage": "__AVAILABLE_OUTPUTS__",
+  "workflowId": "video-processing-example",
+  "artifacts": [
+    {
+      "artifactType": "subtitles",
+      "artifactId": "video-subtitles",
+      "version": "1.0.0",
+      "location": "file:///output/subtitles.srt",
+      "producerStage": "subtitle-generation",
+      "validationStatus": "passed"
+    }
+  ],
+  "decision": {
+    "decision": "approved",
+    "rationale": "All generic validation checks passed and no errors found",
+    "relatedArtifacts": [
+      "ArtifactReference(artifact_type='subtitles', artifact_id='video-subtitles', version='1.0.0', location='file:///output/subtitles.srt', producer_stage='subtitle-generation', validation_status='pending')"
+    ]
+  },
+  "version": "1.0.0"
+}

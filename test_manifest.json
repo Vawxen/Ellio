@@ -1,0 +1,50 @@
+{
+  "manifestVersion": "1.0",
+  "workflowId": "video-processing-workflow",
+  "parameters": {
+    "input_video_path": "/default/input/video.mp4",
+    "output_directory": "/default/output",
+    "transcript_location": ""
+  },
+  "stages": [
+    {
+      "stageId": "transcription",
+      "agentRole": "transcription-agent",
+      "dependsOn": [],
+      "inputs": {
+        "video_path": "{{input_video_path}}"
+      },
+      "outputs": {
+        "transcript": {
+          "artifactType": "transcript",
+          "artifactId": "transcript_{{workflowId}}",
+          "version": "1.0.0",
+          "location": "{{output_directory}}/transcripts/transcript_{{workflowId}}.json",
+          "producerStage": "transcription",
+          "validationStatus": "pending"
+        }
+      },
+      "qualityGates": ["schema_validation"]
+    },
+    {
+      "stageId": "translation",
+      "agentRole": "translation-agent",
+      "dependsOn": ["transcription"],
+      "inputs": {
+        "transcript_location": "{{transcript_location}}",
+        "target_language": "es"
+      },
+      "outputs": {
+        "translated_transcript": {
+          "artifactType": "transcript",
+          "artifactId": "translated_transcript_{{workflowId}}",
+          "version": "1.0.0",
+          "location": "{{output_directory}}/translations/translated_transcript_{{workflowId}}.json",
+          "producerStage": "translation",
+          "validationStatus": "pending"
+        }
+      },
+      "qualityGates": ["schema_validation"]
+    }
+  ]
+}

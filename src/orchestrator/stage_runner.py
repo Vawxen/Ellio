@@ -1,0 +1,224 @@
+# src/orchestrator/stage_runner.py
+"""
+Stage runner for executing pipeline stages.
+"""
+
+import subprocess
+import os
+import signal
+import sys
+import shlex
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from pathlib import Path
+
+from ..models.stage_execution_result import StageExecutionResult
+from ..models.artifact_reference import ArtifactReference
+from ..utils.config import config
+from ..utils.storage import storage
+
+
+class StageRunnerError(Exception):
+    """Base exception for stage runner errors."""
+    pass
+
+
+class StageRunner:
+    """
+    Executes pipeline stages as command-line processes.
+    """
+
+    def __init__(self, work_dir: Optional[str] = None):
+        """
+        Initialize stage runner.
+
+        Args:
+            work_dir: Working directory for stage execution (defaults to current directory)
+        """
+        self.work_dir = Path(work_dir) if work_dir else Path.cwd()
+        self.work_dir.mkdir(parents=True, exist_ok=True)
+
+        # Get configuration
+        self.default_timeout = config.get("default_timeout_seconds", 3600)
+        self.env = os.environ.copy()
+
+    def run_stage(self, stage_def: Dict[str, Any],
+                  inputs: List[ArtifactReference],
+                  parameters: Dict[str, Any]) -> StageExecutionResult:
+        """
+        Execute a pipeline stage.
+
+        Args:
+            stage_def: Stage definition dictionary from manifest
+            inputs: List of input artifact references
+            parameters: Workflow parameters for substitution
+
+        Returns:
+            StageExecutionResult with execution details
+
+        Raises:
+            StageRunnerError: If stage execution fails
+        """
+        print(f"DEBUG: Running stage {stage_def['stageId']}", file=sys.stderr)
+        stage_id = stage_def["stageId"]
+        agent_role = stage_def["agentRole"]
+
+        # Record start time
+        started_at = datetime.utcnow()
+
+        try:
+            # Prepare command and arguments
+            command = self._resolve_command(agent_role, stage_def, inputs, parameters)
+
+            # Prepare environment with input artifacts and parameters
+            env = self._prepare_environment(inputs, parameters, stage_def)
+
+            # Prepare working directory
+            stage_work_dir = self.work_dir / stage_id
+            stage_work_dir.mkdir(parents=True, exist_ok=True)
+
+            # Get timeout
+            timeout_seconds = stage_def.get("timeoutSeconds", self.default_timeout)
+
+            # Execute the command
+            process = subprocess.Popen(
+                command,
+                cwd=str(stage_work_dir),
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            try:
+                stdout, stderr = process.communicate(timeout=timeout_seconds)
+                exit_code = process.returncode
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                raise StageRunnerError(f"Stage {stage_id} timed out after {timeout_seconds} seconds")
+
+            # Record finish time
+            finished_at = datetime.utcnow()
+
+            # Parse output artifacts (in a real implementation, the stage would output artifact references)
+            # For MVP, we'll assume the stage produces artifacts based on its outputs definition
+            # and we'll create placeholder artifact references
+            artifacts_produced = self._create_output_artifacts(stage_def, stage_work_dir)
+
+            # Create execution result
+            result = StageExecutionResult(
+                stage_id=stage_id,
+                started_at=started_at,
+                finished_at=finished_at,
+                exit_code=exit_code,
+                stdout=stdout,
+                stderr=stderr,
+                artifacts_produced=artifacts_produced,
+                artifacts_used=inputs,
+                metadata={
+                    "work_dir": str(stage_work_dir),
+                    "command": " ".join(command) if isinstance(command, list) else command,
+                    "agent_role": agent_role
+                }
+            )
+
+            return result
+
+        except Exception as e:
+            print(f"DEBUG: Exception in stage runner: {e}", file=sys.stderr)
+            finished_at = datetime.utcnow()
+            raise StageRunnerError(f"Failed to execute stage {stage_id}: {e}")
+
+    def _resolve_command(self, agent_role: str, stage_def: Dict[str, Any],
+                         inputs: List[ArtifactReference],
+                         parameters: Dict[str, Any]) -> List[str]:
+        """
+        Resolve the agent_role to an actual command to execute.
+
+        For MVP, we'll treat agent_role as a command that can be executed directly
+        and use shlex.split to handle quoted arguments correctly.
+        In a more advanced implementation, this could use a registry or mapping.
+
+        Args:
+            agent_role: Agent role from stage definition
+            stage_def: Full stage definition
+            inputs: Input artifacts
+            parameters: Workflow parameters
+
+        Returns:
+            Command and arguments as a list of strings
+        """
+        # For MVP, we'll assume agent_role is a command that can be executed directly
+        # We'll use shlex.split to handle quoted arguments correctly
+        command_parts = shlex.split(agent_role)
+
+        # Add stage-specific arguments if defined
+        if "args" in stage_def:
+            command_parts.extend(stage_def["args"])
+
+        return command_parts
+
+    def _prepare_environment(self, inputs: List[ArtifactReference],
+                           parameters: Dict[str, Any],
+                           stage_def: Dict[str, Any]) -> Dict[str, str]:
+        """
+        Prepare environment variables for stage execution.
+
+        Args:
+            inputs: Input artifact references
+            parameters: Workflow parameters
+            stage_def: Stage definition
+
+        Returns:
+            Environment variables dictionary
+        """
+        env = self.env.copy()
+
+        # Add input artifacts as environment variables
+        for i, artifact in enumerate(inputs):
+            env[f"INPUT_{i}_TYPE"] = artifact.artifact_type
+            env[f"INPUT_{i}_ID"] = artifact.artifact_id
+            env[f"INPUT_{i}_VERSION"] = artifact.version
+            env[f"INPUT_{i}_LOCATION"] = artifact.location
+
+        # Add workflow parameters
+        for key, value in parameters.items():
+            env[f"PARAM_{key.upper()}"] = str(value)
+
+        # Add stage-specific configuration
+        for key, value in stage_def.items():
+            if key not in ["stageId", "agentRole", "dependsOn", "inputs", "outputs", "qualityGates"]:
+                env[f"STAGE_{key.upper()}"] = str(value)
+
+        return env
+
+    def _create_output_artifacts(self, stage_def: Dict[str, Any],
+                                work_dir: Path) -> List[ArtifactReference]:
+        """
+        Create artifact references for stage outputs.
+        In a real implementation, these would be based on actual outputs.
+        For MVP, we'll create placeholder artifacts.
+
+        Args:
+            stage_def: Stage definition
+            work_dir: Working directory for the stage
+
+        Returns:
+            List of artifact references for outputs
+        """
+        outputs = []
+        for output_def in stage_def.get("outputs", []):
+            # In a real system, the stage would determine the actual artifact IDs and locations
+            # For MVP, we'll use the definition as-is with some placeholders
+            artifact = ArtifactReference(
+                artifact_type=output_def["artifactType"],
+                artifact_id=output_def.get("artifactId", f"{stage_def['stageId']}_output"),
+                version=output_def.get("version", "1.0.0"),
+                location=output_def.get("location", f"file://{work_dir}/output"),
+                producer_stage=stage_def["stageId"],
+                validation_status="pending"  # Will be updated by quality gate
+            )
+            outputs.append(artifact)
+
+        return outputs

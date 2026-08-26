@@ -1,0 +1,25 @@
+{
+  "handoffId": "7d6a200c-c190-46f6-b1d6-7b71d4e08f0c",
+  "timestamp": "2026-08-19T14:33:27.001766",
+  "fromStage": "ingest",
+  "toStage": "__AVAILABLE_OUTPUTS__",
+  "workflowId": "video-processing-example",
+  "artifacts": [
+    {
+      "artifactType": "video",
+      "artifactId": "ingested-video",
+      "version": "1.0.0",
+      "location": "file:///output/ingested-video.mp4",
+      "producerStage": "ingest",
+      "validationStatus": "passed"
+    }
+  ],
+  "decision": {
+    "decision": "approved",
+    "rationale": "All generic validation checks passed and no errors found",
+    "relatedArtifacts": [
+      "ArtifactReference(artifact_type='video', artifact_id='ingested-video', version='1.0.0', location='file:///output/ingested-video.mp4', producer_stage='ingest', validation_status='pending')"
+    ]
+  },
+  "version": "1.0.0"
+}
