@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Transcript Artifact v1",
+  "type": "object",
+  "required": ["artifactType", "artifactId", "version", "location", "producerStage", "validationStatus"],
+  "properties": {
+    "artifactType": { "type": "string", "const": "transcript", "minLength": 1 },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "location": { "type": "string", "format": "uri" },
+    "producerStage": { "type": "string", "minLength": 1 },
+    "validationStatus": { "type": "string", "enum": ["pending", "passed", "failed", "skipped"] }
+  },
+  "additionalProperties": false
+}
