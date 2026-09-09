@@ -1,0 +1,10 @@
+# Ellio Pipeline - Core Dependencies
+jsonschema>=4.0.0
+pytest>=7.0.0
+
+# Optional: For production agent implementations
+# openai-whisper
+# ffmpeg-python
+# torch
+# torchaudio
+# transformers

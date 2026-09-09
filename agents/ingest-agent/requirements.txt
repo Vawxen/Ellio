@@ -1,0 +1,2 @@
+# Requirements for Ingest Agent
+# No external dependencies required for basic file operations

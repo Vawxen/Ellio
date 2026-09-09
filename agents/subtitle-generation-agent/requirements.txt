@@ -1,0 +1,2 @@
+# Requirements for Subtitle Generation Agent
+# No external dependencies required for basic SRT generation

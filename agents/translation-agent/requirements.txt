@@ -1,0 +1,7 @@
+# Requirements for Translation Agent
+# For production, you would need:
+# transformers
+# torch
+# Or a translation API client (Google Translate, DeepL, etc.)
+
+# For MVP, no external dependencies required (uses mock implementation)

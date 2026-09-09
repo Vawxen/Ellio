@@ -1,0 +1,8 @@
+# Requirements for Transcription Agent
+# For production, you would need:
+# openai-whisper
+# ffmpeg-python
+# torch
+# torchaudio
+
+# For MVP, no external dependencies required (uses mock implementation)
