@@ -1,0 +1,3 @@
+# Audio Agent Requirements
+# No additional Python dependencies required for basic ffmpeg subprocess calls
+# ffmpeg should be available in the system PATH

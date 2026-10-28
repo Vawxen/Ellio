@@ -1,0 +1,3 @@
+# Metadata Agent Requirements
+# No additional Python dependencies required for basic ffprobe subprocess calls and JSON handling
+# ffprobe should be available in the system PATH
